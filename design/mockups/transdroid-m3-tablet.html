@@ -180,6 +180,22 @@ body{
 .stile .sk .msr{font-size:16px;}
 .stile .sv{font-size:17px; font-weight:600; margin-top:4px; font-variant-numeric:tabular-nums;}
 
+/* split download / upload overview */
+.ov2{display:flex; gap:12px;}
+.ovcol{flex:1; min-width:0; border-radius:22px; padding:14px 17px 12px;}
+.ovcol.dl{background:var(--dl-track);}
+.ovcol.ul{background:var(--seed-track);}
+.ovhead{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--on-surface-var);}
+.ovhead .msr{font-size:19px;}
+.ovcol.dl .ovhead .msr, .ovcol.dl .ovhero{color:var(--dl);}
+.ovcol.ul .ovhead .msr, .ovcol.ul .ovhero{color:var(--seed);}
+.ovhero{font-size:23px; font-weight:700; font-variant-numeric:tabular-nums; margin:9px 0 6px; line-height:1;}
+.ovrow{display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:8px 0;}
+.ovrow + .ovrow{border-top:1px solid var(--outline-variant);}
+.ovrow .k{font-size:12.5px; color:var(--muted);}
+.ovrow .v{font-size:14px; font-weight:600; color:var(--on-surface); font-variant-numeric:tabular-nums; white-space:nowrap;}
+.ovshared{display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:10px; margin-top:12px;}
+
 /* files */
 .fitem{display:grid; grid-template-columns:24px 1fr auto; gap:0 12px; align-items:center; padding:11px 6px;}
 .fitem + .fitem{border-top:1px solid var(--outline-variant);}
@@ -340,10 +356,28 @@ function renderDetail(it){
     ? `<button class="btn btn-primary"><span class="msr fill">play_arrow</span> ${it.state==='wait'?'Start now':'Resume'}</button>`
     : `<button class="btn btn-primary"><span class="msr fill">pause</span> Pause</button>`;
 
-  const stats = Object.entries(it.stats).map(([k,v])=>{
-    const yes = /ratio/i.test(k);
-    return `<div class="stile"><span class="sk">${k}</span><span class="sv">${v}</span></div>`;
-  }).join('');
+  const g = k => (it.stats[k] ?? '—');
+  const overview = `
+    <div class="ov2">
+      <div class="ovcol dl">
+        <div class="ovhead"><span class="msr fill">arrow_downward</span> Download</div>
+        <div class="ovhero">${g('Down speed')}</div>
+        <div class="ovrow"><span class="k">Downloaded</span><span class="v">${g('Downloaded')}</span></div>
+        <div class="ovrow"><span class="k">Seeders</span><span class="v">${g('Seeders')}</span></div>
+      </div>
+      <div class="ovcol ul">
+        <div class="ovhead"><span class="msr fill">arrow_upward</span> Upload</div>
+        <div class="ovhero">${g('Up speed')}</div>
+        <div class="ovrow"><span class="k">Uploaded</span><span class="v">${g('Uploaded')}</span></div>
+        <div class="ovrow"><span class="k">Peers</span><span class="v">${g('Peers')}</span></div>
+      </div>
+    </div>
+    <div class="ovshared">
+      <div class="stile"><span class="sk">Ratio</span><span class="sv">${g('Ratio')}</span></div>
+      <div class="stile"><span class="sk">Size</span><span class="sv">${g('Size')}</span></div>
+      ${it.stats['ETA'] ? `<div class="stile"><span class="sk">ETA</span><span class="sv">${g('ETA')}</span></div>` : ''}
+      <div class="stile"><span class="sk">Added</span><span class="sv">${g('Added')}</span></div>
+    </div>`;
 
   const files = it.files.map(f=>{
     const col = f.p>=100 ? 'var(--seed)' : (f.p>0 ? 'var(--dl)' : 'var(--outline-variant)');
@@ -395,7 +429,7 @@ function renderDetail(it){
       <button class="dtab" data-tab="trackers">Trackers <span style="opacity:.6">(${it.trackers.length})</span></button>
     </div>
 
-    <div class="panel sel" data-panel="overview"><div class="stat-grid">${stats}</div></div>
+    <div class="panel sel" data-panel="overview">${overview}</div>
     <div class="panel" data-panel="files">${files}</div>
     <div class="panel" data-panel="trackers">${trackers}</div>`;
 
